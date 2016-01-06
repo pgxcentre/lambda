@@ -1,0 +1,43 @@
+# compute_lambda.py - A script to compute genomic inflation factor
+
+`compute_lambda.py` is small script to compute lambda (the genomic inflation
+factor) from a GWAS result.
+
+
+## Dependencies
+
+The tool requires a standard [Python](http://python.org/) installation with the
+following packages:
+
+1. [pandas](http://pandas.pydata.org/) version 0.17 or latest
+
+The tool has been tested on *Linux* only, but should also work on both Mac OSX
+and Windows.
+
+
+## Usage
+
+For Linux users, make sure that the script is executable (using the *chmod*
+command).
+
+```console
+$ python compute_lambda.py --help
+usage: compute_lambda.py [-h] [-v] -i FILE [FILE ...] [-d DELIM] -f NAME
+                         [--chi]
+
+Compute inflation factor (lambda) in GWAS results.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+
+INPUT FILES:
+  -i FILE [FILE ...], --input FILE [FILE ...]
+                        The list of files containing GWAS results.
+  -d DELIM, --delim DELIM
+                        The field delimiter (default is a tabulation).
+  -f NAME, --field NAME
+                        The name of the field containing the statistics.
+  --chi                 Statistics were computed using a chi-squared
+                        distribution.
+```
