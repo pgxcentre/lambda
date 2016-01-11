@@ -22,7 +22,7 @@ Using either `python` or `python3`:
 ```console
 $ python compute_lambda.py --help
 usage: compute_lambda.py [-h] [-v] -i FILE [FILE ...] [-d DELIM] -f NAME
-                         [--chi]
+                         [--chi2]
 
 Compute inflation factor (lambda) in GWAS results.
 
@@ -37,6 +37,6 @@ INPUT FILES:
                         The field delimiter (default is a tabulation).
   -f NAME, --field NAME
                         The name of the field containing the statistics.
-  --chi                 Statistics were computed using a chi-squared
+  --chi2                Statistics were computed using a chi-squared
                         distribution.
 ```
