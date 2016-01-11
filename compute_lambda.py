@@ -8,6 +8,12 @@ import argparse
 
 import pandas as pd
 
+try:
+    import scipy
+    expected_median = scipy.stats.chi2.ppf(0.5, 1)
+except ImportError:
+    expected_median = 0.4549364231195725
+
 
 __copyright__ = "Copyright 2014, Beaulieu-Saucier Pharmacogenomics Centre"
 __license__ = "MIT"
@@ -34,10 +40,11 @@ def main():
         data = data.dropna()
 
         stats = data[args.field]
-        if not args.chi:
+        if not args.chi2:
             stats = stats ** 2
-        l = max(stats.median() / 0.456, 1)
-        logger.info("  lambda = {:.6f}".format(round(l, 6)))
+
+        inflation_factor = max(stats.median() / expected_median, 1)
+        logger.info("  lambda = {:.6f}".format(round(inflation_factor, 6)))
 
 
 def check_args(args):
@@ -47,7 +54,6 @@ def check_args(args):
         args (argparse.Namespace): the arguments and options.
 
     """
-    final_filenames = []
     for fn in args.i_filenames:
         # Checking the file exists
         if not os.path.isfile(fn):
@@ -85,7 +91,7 @@ def parse_args():
     group.add_argument("-f", "--field", required=True, metavar="NAME",
                        help="The name of the field containing the statistics.")
 
-    group.add_argument("--chi", action="store_true",
+    group.add_argument("--chi2", action="store_true",
                        help="Statistics were computed using a chi-squared "
                             "distribution.")
 
