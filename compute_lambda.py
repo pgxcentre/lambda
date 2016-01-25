@@ -9,7 +9,7 @@ import argparse
 import pandas as pd
 
 try:
-    import scipy
+    import scipy.stats
     expected_median = scipy.stats.chi2.ppf(0.5, 1)
 except ImportError:
     expected_median = 0.4549364231195725
