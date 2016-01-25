@@ -6,13 +6,11 @@ import sys
 import logging
 import argparse
 
+import numpy as np
 import pandas as pd
 
-try:
-    import scipy.stats
-    expected_median = scipy.stats.chi2.ppf(0.5, 1)
-except ImportError:
-    expected_median = 0.4549364231195725
+import scipy.stats
+EXPECTED_MEDIAN = scipy.stats.chi2.ppf(0.5, 1)
 
 
 __copyright__ = "Copyright 2014, Beaulieu-Saucier Pharmacogenomics Centre"
@@ -40,10 +38,17 @@ def main():
         data = data.dropna()
 
         stats = data[args.field]
+
+        if args.p_value:
+            if not args.one_sided:
+                stats = 0.5 * stats
+
+            stats = scipy.stats.norm.ppf(1 - stats)
+
         if not args.chi2:
             stats = stats ** 2
 
-        inflation_factor = max(stats.median() / expected_median, 1)
+        inflation_factor = max(np.median(stats) / EXPECTED_MEDIAN, 1)
         logger.info("  lambda = {:.6f}".format(round(inflation_factor, 6)))
 
 
@@ -66,6 +71,14 @@ def check_args(args):
             if args.field not in header:
                 logger.critical("{}: no field named {}".format(fn, args.field))
                 sys.exit(1)
+
+    if args.one_sided and not args.p_value:
+        raise ValueError("The --one-sided option is only valid if the tool "
+                         "is used on p-values.")
+
+    if args.chi2 and args.p_value:
+        raise ValueError("Can't use the --p-value option when the statistics "
+                         "follow a chi-square distribution (not implemented).")
 
 
 def parse_args():
@@ -94,6 +107,15 @@ def parse_args():
     group.add_argument("--chi2", action="store_true",
                        help="Statistics were computed using a chi-squared "
                             "distribution.")
+
+    group.add_argument("--p-value", "-p", action="store_true",
+                       help="Flag to use the p-value instead of the statistic."
+                            " This assumes a standard normal distribution for "
+                            "the test statistic.")
+
+    group.add_argument("--one-sided", "-os", action="store_true",
+                       help="Flag for one-sided tests (when using p-values "
+                            "to compute the inflation factor")
 
     return parser.parse_args()
 
