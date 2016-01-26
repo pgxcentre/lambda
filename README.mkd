@@ -22,7 +22,8 @@ Using either `python` or `python3`:
 ```console
 $ python compute_lambda.py --help
 usage: compute_lambda.py [-h] [-v] -i FILE [FILE ...] [-d DELIM] -f NAME
-                         [--chi2]
+                         [--snp-field NAME] [--chi2] [--p-value] [--one-sided]
+                         [-e FILE]
 
 Compute inflation factor (lambda) in GWAS results.
 
@@ -37,6 +38,19 @@ INPUT FILES:
                         The field delimiter (default is a tabulation).
   -f NAME, --field NAME
                         The name of the field containing the statistics.
+  --snp-field NAME      The name of the field containing the SNP name.
+
+GENERAL OPTIONS:
   --chi2                Statistics were computed using a chi-squared
                         distribution.
+  --p-value, -p         Flag to use the p-value instead of the statistic. This
+                        assumes a standard normal distribution for the test
+                        statistic.
+  --one-sided           Flag for one-sided tests (when using p-values to
+                        compute the inflation factor
+
+SUBSET OPTIONS:
+  -e FILE, --extract FILE
+                        A file containing markers to extract for the analysis
+                        (only one marker per line).
 ```
