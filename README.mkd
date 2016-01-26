@@ -21,7 +21,7 @@ Using either `python` or `python3`:
 
 ```console
 $ python compute_lambda.py --help
-usage: compute_lambda.py [-h] [-v] -i FILE [FILE ...] [-d DELIM] -f NAME
+usage: compute_lambda.py [-h] [-v] -i FILE [FILE ...] [-d DELIM] [-w] -f NAME
                          [--snp-field NAME] [--chi2] [--p-value] [--one-sided]
                          [-e FILE]
 
@@ -36,6 +36,8 @@ INPUT FILES:
                         The list of files containing GWAS results.
   -d DELIM, --delim DELIM
                         The field delimiter (default is a tabulation).
+  -w, --whitespace      The file is delimited by white spaces (e.g. Plink
+                        results).
   -f NAME, --field NAME
                         The name of the field containing the statistics.
   --snp-field NAME      The name of the field containing the SNP name.
@@ -47,7 +49,7 @@ GENERAL OPTIONS:
                         assumes a standard normal distribution for the test
                         statistic.
   --one-sided           Flag for one-sided tests (when using p-values to
-                        compute the inflation factor
+                        compute the inflation factor)
 
 SUBSET OPTIONS:
   -e FILE, --extract FILE
