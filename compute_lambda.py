@@ -15,7 +15,7 @@ EXPECTED_MEDIAN = scipy.stats.chi2.ppf(0.5, 1)
 
 __copyright__ = "Copyright 2014, Beaulieu-Saucier Pharmacogenomics Centre"
 __license__ = "MIT"
-__version__ = "0.1"
+__version__ = "0.2"
 
 
 # Logging configuration
@@ -137,7 +137,7 @@ def parse_args():
 
     # The version of the script
     parser.add_argument("-v", "--version", action="version",
-                        version="lambda-" + __version__)
+                        version="lambda version " + __version__)
 
     # Add the INPUT group
     group = parser.add_argument_group("INPUT FILES")
