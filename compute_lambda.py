@@ -32,24 +32,54 @@ def main():
     args = parse_args()
     check_args(args)
 
-    for fn in args.i_filenames:
-        logger.info("Reading " + fn)
-        data = pd.read_csv(fn, sep=args.delim, usecols=[args.field])
-        data = data.dropna()
+    # The column to extract
+    cols_to_extract = [args.field]
 
+    # Reading the markers to extract (if required)
+    snp_to_extract = set()
+    if args.extract:
+        with open(args.extract, "r") as i_file:
+            snp_to_extract = set(i_file.read().splitlines())
+        cols_to_extract.append(args.snp_field)
+
+    for fn in args.i_filenames:
+        logger.info("Reading '{}'".format(fn))
+        data = pd.read_csv(fn, sep=args.delim, usecols=cols_to_extract)
+
+        # Removing the NAs
+        before = data.shape[0]
+        data = data.dropna()
+        after = data.shape[0]
+        logger.info("  - {:,d} NA values removed".format(before - after))
+
+        # If required, keeping only the required markers
+        if args.extract:
+            data = data[data[args.snp_field].isin(snp_to_extract)]
+            logger.info("  - {:,d} markers extracted".format(data.shape[0]))
+
+        # Reading the column containing the values
         stats = data[args.field]
 
+        # If we have p-values, we need to change them back to z values.
         if args.p_value:
             if not args.one_sided:
+                logger.info("  - computing two-sided statistics from p-values")
                 stats = 0.5 * stats
-
+            else:
+                logger.info("  - computing one-sided statistics from p-values")
             stats = scipy.stats.norm.ppf(1 - stats)
 
+        # If not a chi-squared distribution
         if not args.chi2:
+            logger.info("  - using z/t statistics")
             stats = stats ** 2
+        else:
+            logger.info("  - using chi-squared statistics")
 
+        # Computing the inflation factor using the statistics
+        logger.info("  - computing inflation factor")
         inflation_factor = max(np.median(stats) / EXPECTED_MEDIAN, 1)
-        logger.info("  lambda = {:.6f}".format(round(inflation_factor, 6)))
+        logger.info("  - lambda = {:.6f}".format(round(inflation_factor, 6)))
 
 
 def check_args(args):
@@ -69,16 +99,33 @@ def check_args(args):
         with open(fn, "r") as i_file:
             header = set(i_file.readline().rstrip("\r\n").split(args.delim))
             if args.field not in header:
-                logger.critical("{}: no field named {}".format(fn, args.field))
+                logger.critical(
+                    "{}: no field named '{}'".format(fn, args.field)
+                )
                 sys.exit(1)
 
+            if args.extract:
+                if args.snp_field not in header:
+                    logger.critical(
+                        "{}: no field named '{}'".format(fn, args.snp_field)
+                    )
+                    sys.exit(1)
+
+    # Checking the file containing the markers to extract exists (if required)
+    if args.extract is not None:
+        if not os.path.isfile(args.extract):
+            logger.critical("{}: no such file".format(args.extract))
+            sys.exit(1)
+
     if args.one_sided and not args.p_value:
-        raise ValueError("The --one-sided option is only valid if the tool "
-                         "is used on p-values.")
+        logger.critical("The --one-sided option is only valid if the tool is "
+                        "used on p-values.")
+        sys.exit(1)
 
     if args.chi2 and args.p_value:
-        raise ValueError("Can't use the --p-value option when the statistics "
-                         "follow a chi-square distribution (not implemented).")
+        logger.critical("Can't use the --p-value option when the statistics "
+                        "follow a chi-square distribution (not implemented).")
+        sys.exit(1)
 
 
 def parse_args():
@@ -104,6 +151,11 @@ def parse_args():
     group.add_argument("-f", "--field", required=True, metavar="NAME",
                        help="The name of the field containing the statistics.")
 
+    group.add_argument("--snp-field", metavar="NAME", default="snp",
+                       help="The name of the field containing the SNP name.")
+
+    # Adding general options
+    group = parser.add_argument_group("GENERAL OPTIONS")
     group.add_argument("--chi2", action="store_true",
                        help="Statistics were computed using a chi-squared "
                             "distribution.")
@@ -113,9 +165,15 @@ def parse_args():
                             " This assumes a standard normal distribution for "
                             "the test statistic.")
 
-    group.add_argument("--one-sided", "-os", action="store_true",
+    group.add_argument("--one-sided", action="store_true",
                        help="Flag for one-sided tests (when using p-values "
                             "to compute the inflation factor")
+
+    # Add subset options
+    group = parser.add_argument_group("SUBSET OPTIONS")
+    group.add_argument("-e", "--extract", metavar="FILE",
+                       help="A file containing markers to extract for the "
+                            "analysis (only one marker per line).")
 
     return parser.parse_args()
 
