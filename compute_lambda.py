@@ -2,6 +2,7 @@
 
 
 import os
+import re
 import sys
 import logging
 import argparse
@@ -44,7 +45,16 @@ def main():
 
     for fn in args.i_filenames:
         logger.info("Reading '{}'".format(fn))
-        data = pd.read_csv(fn, sep=args.delim, usecols=cols_to_extract)
+
+        # The 'read_csv' options
+        read_csv_options = dict(usecols=cols_to_extract)
+        if args.whitespace:
+            read_csv_options["delim_whitespace"] = True
+        else:
+            read_csv_options["sep"] = args.delim
+
+        # Reading the file
+        data = pd.read_csv(fn, **read_csv_options)
 
         # Removing the NAs
         before = data.shape[0]
@@ -97,7 +107,8 @@ def check_args(args):
 
         # Checking the column exists for each file
         with open(fn, "r") as i_file:
-            header = set(i_file.readline().rstrip("\r\n").split(args.delim))
+            regex = re.compile(r"\s+" if args.whitespace else "\t")
+            header = set(regex.split(i_file.readline().rstrip("\r\n")))
             if args.field not in header:
                 logger.critical(
                     "{}: no field named '{}'".format(fn, args.field)
@@ -148,6 +159,10 @@ def parse_args():
     group.add_argument("-d", "--delim", default="\t", metavar="DELIM",
                        help="The field delimiter (default is a tabulation).")
 
+    group.add_argument("-w", "--whitespace", action="store_true",
+                       help="The file is delimited by white spaces "
+                            "(e.g. Plink results).")
+
     group.add_argument("-f", "--field", required=True, metavar="NAME",
                        help="The name of the field containing the statistics.")
 
@@ -167,7 +182,7 @@ def parse_args():
 
     group.add_argument("--one-sided", action="store_true",
                        help="Flag for one-sided tests (when using p-values "
-                            "to compute the inflation factor")
+                            "to compute the inflation factor)")
 
     # Add subset options
     group = parser.add_argument_group("SUBSET OPTIONS")
